@@ -1,6 +1,5 @@
 package com.example.arthur.biblia_digital;
 
-import android.app.ListActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
@@ -12,8 +11,12 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-public class ListaLivros extends ActionBarActivity {
+
+public class ListaAZ extends ActionBarActivity {
 
     public static String livro;
     private ListView listView;
@@ -24,6 +27,7 @@ public class ListaLivros extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lista_livros);
         setTitle("Livros");
+        Collections.sort(MainActivity.listaLivros);
         listView = (ListView) findViewById(R.id.list);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_list_item_1, android.R.id.text1, MainActivity.listaLivros);
@@ -41,10 +45,10 @@ public class ListaLivros extends ActionBarActivity {
 
     }
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_lista_livros, menu);
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_lista_az, menu);
         return true;
     }
 

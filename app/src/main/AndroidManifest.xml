@@ -20,6 +20,18 @@
             android:name=".ListaLivros"
             android:label="@string/title_activity_lista_livros" >
         </activity>
+        <activity
+            android:name=".ListaCapitulos"
+            android:label="@string/title_activity_lista_capitulos" >
+        </activity>
+        <activity
+            android:name=".ListaVersiculos"
+            android:label="@string/title_activity_lista_versiculos" >
+        </activity>
+        <activity
+            android:name=".ListaAZ"
+            android:label="@string/title_activity_lista_az" >
+        </activity>
     </application>
 
 </manifest>
