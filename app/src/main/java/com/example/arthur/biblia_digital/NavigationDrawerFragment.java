@@ -1,5 +1,9 @@
 package com.example.arthur.biblia_digital;
 
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.speech.RecognizerIntent;
 import android.support.v7.app.ActionBarActivity;
 import android.app.Activity;
 import android.support.v7.app.ActionBar;
@@ -21,6 +25,12 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
+
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import java.util.ArrayList;
 
 /**
  * Fragment used for managing interactions for and presentation of a navigation drawer.
@@ -57,6 +67,8 @@ public class NavigationDrawerFragment extends Fragment {
     private int mCurrentSelectedPosition = 0;
     private boolean mFromSavedInstanceState;
     private boolean mUserLearnedDrawer;
+    private static final int REQUEST_CODE = 1234;
+    final Context context = this.context;
 
     public NavigationDrawerFragment() {
     }
@@ -248,11 +260,81 @@ public class NavigationDrawerFragment extends Fragment {
         }
 
         if (item.getItemId() == R.id.action_example) {
-            Toast.makeText(getActivity(), "Example action.", Toast.LENGTH_SHORT).show();
+            startVoiceRecognitionActivity();
+            //Toast.makeText(getActivity(), "Example action.", Toast.LENGTH_SHORT).show();
             return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent intentRetorno){
+        if(requestCode == 1){
+            //Tratar o retorno do contato
+            Uri contatoEscolhido = intentRetorno.getData();
+
+            //mostra o ID do contato
+            //Toast.makeText(MainActivity.this, contatoEscolhido.toString(), Toast.LENGTH_LONG).show();
+
+            //Abre o contato
+            startActivity(new Intent(Intent.ACTION_VIEW, contatoEscolhido));
+        }
+
+        if (requestCode == REQUEST_CODE) {
+
+            ArrayList<String> matches = intentRetorno.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            String resultadoQuebrado[] = matches.get(0).split(" ");
+
+            if (resultadoQuebrado.length == 1 && MainActivity.listaLivros.contains(resultadoQuebrado[0])){
+
+
+
+                Intent intent = new Intent(context, ListaCapitulos.class);
+                Bundle params = new Bundle();
+                params.putString("livro", resultadoQuebrado[0]);
+                intent.putExtras(params);
+                startActivity(intent);
+            }
+/*
+            if (resultadoQuebrado.length == 3 && (resultadoQuebrado[1].equals("capitulo") || resultadoQuebrado[1].equals("capítulo"))){
+
+                Intent intent = new Intent(context, ResultadoBusca.class);
+                Bundle params = new Bundle();
+                params.putInt("busca", 1);
+                params.putString("livro", resultadoQuebrado[0]);
+                params.putInt("capitulo", Integer.parseInt(resultadoQuebrado[2]));
+                intent.putExtras(params);
+
+                startActivity(intent);
+
+            }
+
+            if (resultadoQuebrado.length == 2 && arrayLivros.contains(resultadoQuebrado[0])){
+                Intent intent = new Intent(context, ResultadoBusca.class);
+                Bundle params = new Bundle();
+                params.putInt("busca", 1);
+                params.putString("livro", resultadoQuebrado[0]);
+                params.putInt("capitulo", Integer.parseInt(resultadoQuebrado[1]));
+                intent.putExtras(params);
+
+                startActivity(intent);
+            }*/
+        }
+
+    }
+
+    private void startVoiceRecognitionActivity() {
+
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT,"Fale agora...");
+
+        startActivityForResult(intent, REQUEST_CODE);
+
     }
 
     /**

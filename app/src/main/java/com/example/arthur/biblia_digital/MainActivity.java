@@ -50,13 +50,13 @@ public class MainActivity extends ActionBarActivity
     private CharSequence mTitle;
     private final Context context = this;
     public static NodeList nodeLivros;
-    public static List<String> listaLivros = new ArrayList<String>();
+    public static ArrayList<String> listaLivros = new ArrayList<String>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        //context.deleteDatabase("database.db");
         mNavigationDrawerFragment = (NavigationDrawerFragment)
                 getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
         mTitle = getTitle();
@@ -113,10 +113,15 @@ public class MainActivity extends ActionBarActivity
             case 2:
                 mTitle = getString(R.string.title_section2);
                 Intent intent2 = new Intent(this, ListaAZ.class);
+                Bundle params = new Bundle();
+                params.putStringArrayList("livros", listaLivros);
+                intent2.putExtras(params);
                 startActivity(intent2);
                 break;
             case 3:
                 mTitle = getString(R.string.title_section3);
+                Intent intent3 = new Intent(this, ListaFavoritos.class);
+                startActivity(intent3);
                 break;
         }
     }

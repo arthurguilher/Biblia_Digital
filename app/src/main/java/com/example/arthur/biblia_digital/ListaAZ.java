@@ -25,12 +25,15 @@ public class ListaAZ extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_lista_livros);
-        setTitle("Livros");
-        Collections.sort(MainActivity.listaLivros);
-        listView = (ListView) findViewById(R.id.list);
+        setContentView(R.layout.activity_lista_az);
+        setTitle("Livros de A-Z");
+        Intent intent = getIntent();
+        Bundle params = intent.getExtras();
+        ArrayList<String> listaOrdenada = params.getStringArrayList("livros");
+        Collections.sort(listaOrdenada);
+        listView = (ListView) findViewById(R.id.listAZ);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-                android.R.layout.simple_list_item_1, android.R.id.text1, MainActivity.listaLivros);
+                android.R.layout.simple_list_item_1, android.R.id.text1, listaOrdenada);
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override

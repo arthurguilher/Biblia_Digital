@@ -32,6 +32,10 @@
             android:name=".ListaAZ"
             android:label="@string/title_activity_lista_az" >
         </activity>
+        <activity
+            android:name=".ListaFavoritos"
+            android:label="@string/title_activity_lista_favoritos" >
+        </activity>
     </application>
 
 </manifest>
