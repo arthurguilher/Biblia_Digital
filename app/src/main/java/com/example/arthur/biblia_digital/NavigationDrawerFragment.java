@@ -282,14 +282,17 @@ public class NavigationDrawerFragment extends Fragment {
             startActivity(new Intent(Intent.ACTION_VIEW, contatoEscolhido));
         }
 
-        if (requestCode == REQUEST_CODE) {
+        if (requestCode == REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+
 
             ArrayList<String> matches = intentRetorno.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
             String resultadoQuebrado[] = matches.get(0).split(" ");
 
-            if (resultadoQuebrado.length == 1 && MainActivity.listaLivros.contains(resultadoQuebrado[0])){
+            //System.out.println(resultadoQuebrado[0].substring(0, 1).toLowerCase() + resultadoQuebrado[0].substring(1, resultadoQuebrado[0].length()));
 
+            if (resultadoQuebrado.length == 1 && MainActivity.listaLivros.contains(resultadoQuebrado[0].substring(0, 1).toUpperCase() + resultadoQuebrado[0].substring(1, resultadoQuebrado[0].length()))){
 
+                //System.out.println(resultadoQuebrado[0]);
 
                 Intent intent = new Intent(context, ListaCapitulos.class);
                 Bundle params = new Bundle();

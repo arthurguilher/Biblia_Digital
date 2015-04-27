@@ -22,6 +22,7 @@ public class ListaCapitulos extends ActionBarActivity {
     public static NodeList nodeCapitulos;
     private final Context context = this;
     private ListView listView;
+    public static int qntCapitulos;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,7 +34,7 @@ public class ListaCapitulos extends ActionBarActivity {
         setTitle(livro);
 
         /********** Código para armazenar os capítulos em um array*********/
-        int qntCapitulos = 0;
+        qntCapitulos = 0;
         for (int temp = 0; temp < MainActivity.nodeLivros.getLength(); temp++) {
             Node nNode = MainActivity.nodeLivros.item(temp);
             if (nNode.getNodeType() == Node.ELEMENT_NODE) {
@@ -68,8 +69,11 @@ public class ListaCapitulos extends ActionBarActivity {
                 Intent intent = new Intent(context, ListaVersiculos.class);
                 Bundle params = new Bundle();
                 params.putInt("capitulo", position + 1);
+                params.putString("livro", livro);
                 intent.putExtras(params);
                 startActivity(intent);
+                MyDBHandler db = new MyDBHandler(context, null, null, 1);
+                db.adicionarHistorico(new Historico(livro, position+1));
             }
         });
 

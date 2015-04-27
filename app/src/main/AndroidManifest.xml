@@ -36,6 +36,14 @@
             android:name=".ListaFavoritos"
             android:label="@string/title_activity_lista_favoritos" >
         </activity>
+        <activity
+            android:name=".ListaHistorico"
+            android:label="@string/title_activity_lista_historico" >
+        </activity>
+        <activity
+            android:name=".ListaVersiculosFragment"
+            android:label="@string/title_activity_lista_versiculos_fragment" >
+        </activity>
     </application>
 
 </manifest>

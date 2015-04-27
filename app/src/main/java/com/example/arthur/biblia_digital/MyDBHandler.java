@@ -17,6 +17,7 @@ public class MyDBHandler extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION = 1;
     private static final String DATABASE_NAME = "database.db";
     public static final String TABLE_FAVORITOS = "favoritos";
+    public static final String TABLE_HISTORICO = "historico";
 
     public static final String COLUMN_ID = "id";
     public static final String COLUMN_LIVRO = "livro";
@@ -37,6 +38,8 @@ public class MyDBHandler extends SQLiteOpenHelper {
                 + " TEXT," + COLUMN_CAPITULO + " INTEGER," + COLUMN_VERSICULO + " TEXT" + ")";*/
         String query = "CREATE TABLE favoritos (id INTEGER PRIMARY KEY AUTOINCREMENT, livro TEXT, capitulo INTEGER, versiculo TEXT, id_versiculo INTEGER)";
         db.execSQL(query);
+        String query2 = "CREATE TABLE historico (id INTEGER PRIMARY KEY AUTOINCREMENT, livro TEXT, capitulo INTEGER)";
+        db.execSQL(query2);
 
     }
 
@@ -44,7 +47,23 @@ public class MyDBHandler extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int arg1, int arg2) {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_FAVORITOS);
         onCreate(db);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_HISTORICO);
+        onCreate(db);
     }
+
+
+    public void adicionarHistorico(Historico historico) {
+
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_LIVRO, historico.getLivro());
+        values.put(COLUMN_CAPITULO, historico.getCapitulo());
+
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        db.insert(TABLE_HISTORICO, null, values);
+        db.close();
+    }
+
 
     public void adicionarFavorito(Favorito favorito) {
 
@@ -55,7 +74,7 @@ public class MyDBHandler extends SQLiteOpenHelper {
         values.put(COLUMN_ID_VERSICULO, favorito.getId_versiculo());
 
         SQLiteDatabase db = this.getWritableDatabase();
-
+        System.out.println("Versiculo: " + favorito.getId_versiculo());
         db.insert(TABLE_FAVORITOS, null, values);
         db.close();
     }
@@ -108,6 +127,30 @@ public class MyDBHandler extends SQLiteOpenHelper {
         return listaFavoritosLivros;
     }
 
+    public ArrayList<Historico> listaHistorico() {
+        String query = "Select * FROM " + TABLE_HISTORICO;
+        ArrayList<Historico> listaHistorico = new ArrayList<Historico>();
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        Cursor cursor = db.rawQuery(query, null);
+
+        if (cursor.moveToFirst()) {
+            while (cursor.isAfterLast() == false) {
+                Historico historico = new Historico();
+                historico.setId(Integer.parseInt(cursor.getString(0)));
+                historico.setLivro(cursor.getString(1));
+                historico.setCapitulo(Integer.parseInt(cursor.getString(2)));
+                listaHistorico.add(historico);
+                cursor.moveToNext();
+            }
+        } else {
+            //favorito = null;
+        }
+        cursor.close();
+        db.close();
+        return listaHistorico;
+    }
+    
 
     public boolean excluirFavorito(Favorito favorito) {
 

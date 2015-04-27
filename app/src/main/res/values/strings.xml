@@ -1,16 +1,17 @@
 <resources>
-    <string name="app_name">Biblia_Digital</string>
+    <string name="app_name">Biblia Digital</string>
 
     <string name="title_section1">Livros na ordem natural</string>
     <string name="title_section2">Livros de A-Z</string>
     <string name="title_section3">Favoritos</string>
+    <string name="title_section4">Histórico</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_example">Example action</string>
 
-    <string name="action_settings">Settings</string>
+    <string name="action_settings">Ajustar tamanho da fonte</string>
     <string name="title_activity_lista_livros">ListaLivros</string>
 
     <string name="hello_world">Hello world!</string>
@@ -18,4 +19,6 @@
     <string name="title_activity_lista_versiculos">ListaVersiculos</string>
     <string name="title_activity_lista_az">ListaAZ</string>
     <string name="title_activity_lista_favoritos">ListaFavoritos</string>
+    <string name="title_activity_lista_historico">ListaHistorico</string>
+    <string name="title_activity_lista_versiculos_fragment">ListaVersiculosFragment</string>
 </resources>
