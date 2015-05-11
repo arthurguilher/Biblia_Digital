@@ -26,7 +26,10 @@ public class ListaLivros extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lista_livros);
-        setTitle("Livros");
+        setTitle("  Livros");
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setLogo(R.drawable.icone_biblia);
+        getSupportActionBar().setDisplayUseLogoEnabled(true);
         List<String> listaLivros = MainActivity.listaLivros;
         listView = (ListView) findViewById(R.id.list);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,

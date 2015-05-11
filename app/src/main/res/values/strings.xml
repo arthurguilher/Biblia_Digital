@@ -5,13 +5,17 @@
     <string name="title_section2">Livros de A-Z</string>
     <string name="title_section3">Favoritos</string>
     <string name="title_section4">Histórico</string>
+    <string name="title_section5">Última leitura</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
-    <string name="action_example">Example action</string>
+    <string name="action_example">Opções</string>
 
     <string name="action_settings">Ajustar tamanho da fonte</string>
+    <string name="action_settings_historico">Limpar histórico</string>
+    <string name="action_settings_favoritos">Excluir favoritos</string>
+
     <string name="title_activity_lista_livros">ListaLivros</string>
 
     <string name="hello_world">Hello world!</string>
@@ -21,4 +25,12 @@
     <string name="title_activity_lista_favoritos">ListaFavoritos</string>
     <string name="title_activity_lista_historico">ListaHistorico</string>
     <string name="title_activity_lista_versiculos_fragment">ListaVersiculosFragment</string>
+
+    <drawable name="amarelo">#fffff286</drawable>
+    <string name="title_activity_lista_livros_fragment">ListaLivrosFragment</string>
+
+<!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_tela_inicial">TelaInicial</string>
+
 </resources>

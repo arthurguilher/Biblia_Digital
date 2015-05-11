@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -36,34 +37,63 @@ public class ListaVersiculos extends ActionBarActivity {
     public static int capitulo;
     private int idVersiculo;
     public static String livro;
-    private List<String> listaVersiculos = new ArrayList<String>();
-    private List<String> listaAuxiliar = new ArrayList<String>();
-    private ListView listView;
+    private ArrayList<String> listaVersiculos = new ArrayList<String>();
     private final Context context = this;
+    private int paginas;
     private ViewPager mPager;
     private PagerAdapter mPagerAdapter;
-    private static final int NUM_PAGES = ListaCapitulos.qntCapitulos;
+    private NodeList nodesLivros = MainActivity.nodeLivros;
+    private NodeList nodesCapitulos;
+    public static int busca = 0;
+    public static int versiculoFavorito;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lista_versiculos);
-
-        // Instantiate a ViewPager and a PagerAdapter.
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setLogo(R.drawable.icone_biblia_aberta);
+        getSupportActionBar().setDisplayUseLogoEnabled(true);
         mPager = (ViewPager) findViewById(R.id.pager);
         mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
-        mPager.setAdapter(mPagerAdapter);
 
         Intent intent = getIntent();
         Bundle params = intent.getExtras();
         capitulo = params.getInt("capitulo");
         livro = params.getString("livro");
-        setTitle(livro + " - Capítulo " + capitulo);
-        NodeList nodesLivros = MainActivity.nodeLivros;
-        NodeList nodesCapitulos = ListaCapitulos.nodeCapitulos;
+        paginas = params.getInt("qntCapitulos");
+        busca = params.getInt("busca");
+        setTitle("  " + livro + " - Capítulo " + capitulo);
+
+        if (busca == 1) {
+            nodesCapitulos = MainActivity.nodeCapitulos;
+            versiculoFavorito = params.getInt("idVersiculo");
+        } else {
+            nodesCapitulos = ListaCapitulos.nodeCapitulos;
+        }
+
+        mPager.setAdapter(mPagerAdapter);
+        mPager.setCurrentItem(capitulo-1);
+        mPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                setTitle("  " + livro + " - Capítulo " + (mPager.getCurrentItem() + 1));
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+            }
+        });
 
 
-        /********** Código para criar lista de versículos ***************/
+    }
+
+    public ArrayList<String> listarVersiculo(int capitulo) {
+        ArrayList<String> listaAuxiliar = new ArrayList<String>();
         for (int temp = 0; temp < nodesLivros.getLength(); temp++) {
             Node nNode = nodesLivros.item(temp);
             if (nNode.getNodeType() == Node.ELEMENT_NODE) {
@@ -90,20 +120,9 @@ public class ListaVersiculos extends ActionBarActivity {
                 }
             }
         }
-        /*listView = (ListView) findViewById(R.id.list);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-                android.R.layout.simple_list_item_1, android.R.id.text1, listaAuxiliar);
-        listView.setAdapter(adapter);
-        registerForContextMenu(listView);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                idVersiculo = position;
-                System.out.println(position);
-                alertMessage();
-            }
-        });*/
+        return listaAuxiliar;
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -121,49 +140,13 @@ public class ListaVersiculos extends ActionBarActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            ShowDialog();
-
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-
-    @Override
-    public void onBackPressed() {
-        if (mPager.getCurrentItem() == 0) {
-            // If the user is currently looking at the first step, allow the system to handle the
-            // Back button. This calls finish() on this activity and pops the back stack.
-            super.onBackPressed();
-        } else {
-            // Otherwise, select the previous step.
-            mPager.setCurrentItem(mPager.getCurrentItem() - 1);
-        }
-    }
-
-    /**
-     * A simple pager adapter that represents 5 ScreenSlidePageFragment objects, in
-     * sequence.
-     */
-    private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
-        public ScreenSlidePagerAdapter(FragmentManager fm) {
-            super(fm);
-        }
-
-        @Override
-        public Fragment getItem(int position) {
-            setTitle(livro + " - Capítulo " + position);
-            return new ListaVersiculosFragment();
-        }
-
-        @Override
-        public int getCount() {
-            return NUM_PAGES;
-        }
-    }
-
-    public void alertMessage() {
+    /*public void alertMessage() {
         DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
                 switch (which) {
@@ -197,73 +180,41 @@ public class ListaVersiculos extends ActionBarActivity {
             //menu.add(obj.name);
         }
     }
+*/
+    @Override
+    public void onBackPressed() {
+        //if (mPager.getCurrentItem() == 0) {
+            // If the user is currently looking at the first step, allow the system to handle the
+            // Back button. This calls finish() on this activity and pops the back stack.
+            super.onBackPressed();
+        //} else {
+            // Otherwise, select the previous step.
+          //  mPager.setCurrentItem(mPager.getCurrentItem() - 1);
+        //}
+    }
 
-    public void ShowDialog() {
-        final AlertDialog.Builder popDialog = new AlertDialog.Builder(this);
-        final SeekBar seek = new SeekBar(this);
-        seek.setMax(100);
 
-        popDialog.setIcon(android.R.drawable.btn_star_big_on);
-        popDialog.setTitle("Please Select Rank 1-100 ");
-        popDialog.setView(seek);
+    private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
 
-        seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                //Do something here with new value
-                //txtView.setText("Value of : " + progress);
+        public ScreenSlidePagerAdapter(FragmentManager fm) {
+            super(fm);
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+
+            MyDBHandler db = new MyDBHandler(context, null, null, 1);
+            if (db.ultimoHistorico().getCapitulo() != mPager.getCurrentItem() + 1 && db.ultimoHistorico().getLivro() != livro) {
+             db.adicionarHistorico(new Historico(livro, mPager.getCurrentItem() + 1));
             }
 
-            public void onStartTrackingTouch(SeekBar arg0) {
-                // TODO Auto-generated method stub
+            return new ListaVersiculosFragment(listarVersiculo(position+1), listaVersiculos, livro, position+1);
+        }
 
-            }
-
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                // TODO Auto-generated method stub
-
-            }
-        });
-
-
-        // Button OK
-        popDialog.setPositiveButton("OK",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-
-                });
-
-
-        popDialog.create();
-        popDialog.show();
-
-
-        seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-           // TextView t1=(TextView) findViewById(R.id.text);
-            int p=0;
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-// TODO Auto-generated method stub
-                if (p < 30) {
-                    p = 30;
-                    seek.setProgress(p);
-                }
-                Toast.makeText(getBaseContext(), String.valueOf(p), Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-// TODO Auto-generated method stub
-            }
-
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-// TODO Auto-generated method stub
-                p = progress;
-                //t1.setTextSize(p);
-            }
-        });
+        @Override
+        public int getCount() {
+            return paginas;
+        }
     }
 
 }

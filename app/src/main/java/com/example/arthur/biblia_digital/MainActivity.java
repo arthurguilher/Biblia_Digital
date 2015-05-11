@@ -19,8 +19,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.support.v4.widget.DrawerLayout;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,6 +36,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.Collator;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 
@@ -43,7 +48,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 
 public class MainActivity extends ActionBarActivity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks {
+        implements NavigationDrawerFragment.NavigationDrawerCallbacks  {
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -57,10 +62,12 @@ public class MainActivity extends ActionBarActivity
     private final Context context = this;
     public static NodeList nodeLivros;
     public static ArrayList<String> listaLivros = new ArrayList<String>();
-    private ArrayList<String> listaLivrosAux = new ArrayList<String>();
     private static final int REQUEST_CODE = 1234;
+    public static NodeList nodeCapitulos;
     private Button speakButton;
     private String livro;
+    private int qntCapitulos;
+    private boolean aux = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,7 +77,6 @@ public class MainActivity extends ActionBarActivity
         mNavigationDrawerFragment = (NavigationDrawerFragment)
                 getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
         mTitle = getTitle();
-
         // Set up the drawer.
         mNavigationDrawerFragment.setUp(
                 R.id.navigation_drawer,
@@ -88,7 +94,6 @@ public class MainActivity extends ActionBarActivity
 
         });
 
-        listaLivrosAux.add("Genesis");
 
         /******* Ler o XML ********/
         try {
@@ -113,14 +118,139 @@ public class MainActivity extends ActionBarActivity
         } catch (SAXException e) {
             System.out.println(e.getMessage());
         }
+        versiculoDiario();
+        MyDBHandler db = new MyDBHandler(context, null, null, 1);
+        VersiculoDiario ultimoVersiculoDiario = db.ultimoVersiculoDiario();
+        if (ultimoVersiculoDiario != null){
+        TextView textView = (TextView) findViewById(R.id.versiculoDiario);
+        textView.setText("Versículo do dia: \n" +
+               ultimoVersiculoDiario.getVersiculo() + " \n" + ultimoVersiculoDiario.getLivro() + " " + ultimoVersiculoDiario.getCapitulo() + ":" + ultimoVersiculoDiario.getId_versiculo());
 
-    }
+            }
+       }
 
     private void startVoiceRecognitionActivity() {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, "pt-BR");
         intent.putExtra(RecognizerIntent.EXTRA_PROMPT,"Fale agora...");
         startActivityForResult(intent, REQUEST_CODE);
+    }
+
+    public void versiculoDiario() {
+        GregorianCalendar date = new GregorianCalendar();
+        int dia = date.get(Calendar.DAY_OF_YEAR);
+        int ano = date.get(Calendar.YEAR);
+        ArrayList<String> livros = new ArrayList<String>();
+        for (int i = 0; i < listaLivros.size(); i++){
+            livros.add(listaLivros.get(i));
+        }
+        Collections.shuffle(livros);
+        String livro = livros.get(0);
+        ArrayList<Integer> capitulos = new ArrayList<Integer>();
+        for (int i = 1; i < qntCapitulos(livro)+1; i++) {
+            capitulos.add(i);
+        }
+        Collections.shuffle(capitulos);
+        int capitulo = capitulos.get(0);
+        ArrayList<Integer> versiculos = new ArrayList<Integer>();
+        for (int i = 1; i < qntVersiculos(livro, capitulo)+1; i++) {
+            versiculos.add(i);
+        }
+        Collections.shuffle(versiculos);
+        int idVersiculo = versiculos.get(0);
+        String versiculo = buscarVersiculo(livro, capitulo, idVersiculo);
+        MyDBHandler db = new MyDBHandler(context, null, null, 1);
+        VersiculoDiario ultimoVersiculoDiario = db.ultimoVersiculoDiario();
+        if (ultimoVersiculoDiario == null){
+            db.adicionarVersiculoDiario(new VersiculoDiario(livro, capitulo, versiculo, idVersiculo, dia, ano));
+        } else if (ultimoVersiculoDiario.getAno() != ano && ultimoVersiculoDiario.getDia() != dia){
+            db.adicionarVersiculoDiario(new VersiculoDiario(livro, capitulo, versiculo, idVersiculo, dia, ano));
+        }
+    }
+
+    public String buscarVersiculo(String livro, int capitulo, int idVersiculo){
+       String versiculo = "";
+        ArrayList<String> listaAuxiliar = new ArrayList<String>();
+        for (int temp = 0; temp < nodeLivros.getLength(); temp++) {
+            Node nNode = nodeLivros.item(temp);
+            if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+                Element eElement = (Element) nNode;
+                if (eElement.getAttribute("n").equalsIgnoreCase(livro.toLowerCase())) {
+                    for (int i = 0; i < nodeCapitulos.getLength(); i++) {
+                        Node nNode2 = nodeCapitulos.item(i);
+                        if (nNode2.getNodeType() == Node.ELEMENT_NODE) {
+                            Element eElement2 = (Element) nNode2;
+                            NodeList versiculos = eElement2.getChildNodes();
+                            if (Integer.parseInt(eElement2.getAttribute("n")) == capitulo) {
+                                for (int j = 0; j < versiculos.getLength(); j++) {
+                                    Node nNode3 = versiculos.item(j);
+                                    if (nNode3.getNodeType() == Node.ELEMENT_NODE) {
+                                        Element eElement3 = (Element) nNode3;
+                                        if (Integer.parseInt(eElement3.getAttribute("n")) == idVersiculo) {
+                                            versiculo = eElement2.getElementsByTagName("v").item(Integer.parseInt(eElement3.getAttribute("n")) - 1).getTextContent();
+                                        break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return versiculo;
+    }
+
+    public static int qntCapitulos(String livro){
+        int valor = 0;
+        for (int temp = 0; temp < MainActivity.nodeLivros.getLength(); temp++) {
+            Node nNode = MainActivity.nodeLivros.item(temp);
+            if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+                Element eElement = (Element) nNode;
+                if (eElement.getAttribute("n").equalsIgnoreCase(livro)) {
+                    nodeCapitulos = eElement.getChildNodes();
+                    for (int i = 0; i < nodeCapitulos.getLength(); i++) {
+                        Node nNode2 = nodeCapitulos.item(i);
+                        if (nNode2.getNodeType() == Node.ELEMENT_NODE) {
+                            //element = (Element) nNode2;
+                            valor++;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        return valor;
+    }
+
+    public int qntVersiculos(String livro, int capitulo) {
+        int qntVersiculos = 0;
+        ArrayList<String> listaAuxiliar = new ArrayList<String>();
+        for (int temp = 0; temp < nodeLivros.getLength(); temp++) {
+            Node nNode = nodeLivros.item(temp);
+            if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+                Element eElement = (Element) nNode;
+                if (eElement.getAttribute("n").equalsIgnoreCase(livro.toLowerCase())) {
+                    for (int i = 0; i < nodeCapitulos.getLength(); i++) {
+                        Node nNode2 = nodeCapitulos.item(i);
+                        if (nNode2.getNodeType() == Node.ELEMENT_NODE) {
+                            Element eElement2 = (Element) nNode2;
+                            NodeList versiculos = eElement2.getChildNodes();
+                            if (Integer.parseInt(eElement2.getAttribute("n")) == capitulo) {
+                                for (int j = 0; j < versiculos.getLength(); j++) {
+                                    Node nNode3 = versiculos.item(j);
+                                    if (nNode3.getNodeType() == Node.ELEMENT_NODE) {
+                                        qntVersiculos++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        return qntVersiculos;
     }
 
     @Override
@@ -130,9 +260,9 @@ public class MainActivity extends ActionBarActivity
         fragmentManager.beginTransaction()
                 .replace(R.id.container, PlaceholderFragment.newInstance(position + 1))
                 .commit();
-
         Intent intent;
         switch (position) {
+
             case 0:
                 mTitle = getString(R.string.title_section1);
                 intent = new Intent(this, ListaLivros.class);
@@ -145,6 +275,8 @@ public class MainActivity extends ActionBarActivity
                 params.putStringArrayList("livros", listaLivros);
                 intent.putExtras(params);
                 startActivity(intent);
+                /*fragmentManager.beginTransaction()
+                        .replace(R.id.container, FavoritoFragment.newInstance("string1", "string2")).commit();*/
                 break;
             case 2:
                 mTitle = getString(R.string.title_section3);
@@ -153,11 +285,28 @@ public class MainActivity extends ActionBarActivity
                 break;
             case 3:
                 mTitle = getString(R.string.title_section4);
-                intent = new Intent(this, ListaHistorico.class);
+               intent = new Intent(this, ListaHistorico.class);
+                startActivity(intent);
+                /*fragmentManager.beginTransaction()
+                        .replace(R.id.container, HistoricoFragment.newInstance("string1", "string2")).commit();*/
+                break;
+            case 4:
+                mTitle = getString(R.string.title_section5);
+                MyDBHandler db = new MyDBHandler(context, null, null, 1);
+                Historico historico = db.ultimoHistorico();
+                intent = new Intent(this, ListaVersiculos.class);
+                Bundle params2 = new Bundle();
+                params2.putInt("busca", 1);
+                params2.putInt("capitulo", historico.getCapitulo());
+                params2.putString("livro", historico.getLivro());
+                params2.putInt("qntCapitulos", qntCapitulos(historico.getLivro()));
+                intent.putExtras(params2);
                 startActivity(intent);
                 break;
         }
-    }
+
+     }
+
 
     @Override
     protected void onActivityResult (int requestCode, int resultCode,Intent intentRetorno){
@@ -188,15 +337,25 @@ public class MainActivity extends ActionBarActivity
                     Node nNode = MainActivity.nodeLivros.item(temp);
                     if (nNode.getNodeType() == Node.ELEMENT_NODE) {
                         Element eElement = (Element) nNode;
-                        if (eElement.getAttribute("n").equalsIgnoreCase(resultadoQuebrado[0])) {
-                            ListaCapitulos.nodeCapitulos = eElement.getChildNodes();
+                        if (eElement.getAttribute("n").equalsIgnoreCase(livro)) {
+                            nodeCapitulos = eElement.getChildNodes();
+                            for (int i = 0; i < nodeCapitulos.getLength(); i++) {
+                                Node nNode2 = nodeCapitulos.item(i);
+                                if (nNode2.getNodeType() == Node.ELEMENT_NODE) {
+                                    //element = (Element) nNode2;
+                                    qntCapitulos++;
+                                }
+                            }
+                            break;
                         }
                     }
                 }
 
                 intent = new Intent(context, ListaVersiculos.class);
                 Bundle params = new Bundle();
+                params.putInt("busca", 1);
                 params.putString("livro", livro);
+                params.putInt("qntCapitulos", qntCapitulos);
                 params.putInt("capitulo", Integer.parseInt(resultadoQuebrado[2]));
                 intent.putExtras(params);
                 startActivity(intent);

@@ -21,15 +21,19 @@ public class ListaAZ extends ActionBarActivity {
     public static String livro;
     private ListView listView;
     private final Context context = this;
+    public static ArrayList<String> listaOrdenada;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lista_az);
-        setTitle("Livros de A-Z");
+        setTitle("  Livros de A-Z");
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setLogo(R.drawable.icone_az);
+        getSupportActionBar().setDisplayUseLogoEnabled(true);
         Intent intent = getIntent();
         Bundle params = intent.getExtras();
-        ArrayList<String> listaOrdenada = params.getStringArrayList("livros");
+        listaOrdenada = params.getStringArrayList("livros");
         Collections.sort(listaOrdenada);
         listView = (ListView) findViewById(R.id.listAZ);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
@@ -41,6 +45,7 @@ public class ListaAZ extends ActionBarActivity {
                 Intent intent = new Intent(context, ListaCapitulos.class);
                 Bundle params = new Bundle();
                 params.putString("livro", (String) listView.getItemAtPosition(position));
+                params.putInt("ordenado", 1);
                 intent.putExtras(params);
                 startActivity(intent);
             }

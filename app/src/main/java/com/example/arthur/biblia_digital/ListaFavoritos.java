@@ -11,6 +11,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Checkable;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.SimpleAdapter;
@@ -32,20 +33,45 @@ public class ListaFavoritos extends ActionBarActivity {
     private int index;
     private ArrayList<Favorito> listaFavoritos = new ArrayList<Favorito>();
     private final Context context = this;
+    private ArrayList <Favorito> favoritosParaExcluir = new ArrayList<Favorito>();
+    public static ArrayList<View> views = new ArrayList<View>();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lista_favoritos);
-        setTitle("Favoritos");
+        setTitle("  Favoritos");
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setLogo(R.drawable.icone_favoritos);
+        getSupportActionBar().setDisplayUseLogoEnabled(true);
         //Pegar lista de todos os favoritos do bd
         MyDBHandler dbHandler = new MyDBHandler(this, null, null, 1);
         listaFavoritos = dbHandler.listaFavoritos();
 
-        ListView listView = (ListView) findViewById(R.id.list);
+        final ListView listView = (ListView) findViewById(R.id.list);
         SimpleAdapter adapter = new SimpleAdapter(this, listarFavoritos(), R.layout.favorito,
                 new String[] {"livro", "versiculo"}, new int[] {R.id.livro, R.id.versiculo});
         listView.setAdapter(adapter);
+
+        //listView.setAdapter(adapter);
+        //listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    if (views.contains(view)){
+                        views.remove(view);
+                        favoritosParaExcluir.remove(listaFavoritos.get(position));
+                    } else {
+                        favoritosParaExcluir.add(listaFavoritos.get(position));
+                        views.add(view);
+                    }
+                for (int i = 0; i < views.size(); i++){
+                    views.get(i).setSelected(true);
+                }
+            }
+        });
 
         registerForContextMenu(listView);
     }
@@ -80,9 +106,19 @@ public class ListaFavoritos extends ActionBarActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
+
         if (id == R.id.action_settings) {
-            ShowDialog();
+            if (favoritosParaExcluir.isEmpty()){
+                    Toast.makeText(context, "Não há nenhum favorito selecionado", Toast.LENGTH_LONG).show();
+            } else {
+                alertMessage();
+            }
+            return true;
+        }
+
+        if (item.getItemId() == R.id.action_example) {
+            //startVoiceRecognitionActivity();
+            //Toast.makeText(getActivity(), "Example action.", Toast.LENGTH_SHORT).show();
             return true;
         }
 
@@ -91,7 +127,6 @@ public class ListaFavoritos extends ActionBarActivity {
 
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         if (v.getId() == R.id.list) {
-            ListView lv = (ListView) v;
             AdapterView.AdapterContextMenuInfo acmi = (AdapterView.AdapterContextMenuInfo) menuInfo;
             index = acmi.position;
             menu.setHeaderTitle("Opções do favorito");
@@ -126,8 +161,11 @@ public class ListaFavoritos extends ActionBarActivity {
 
             intent = new Intent(context, ListaVersiculos.class);
             Bundle params = new Bundle();
+            params.putInt("busca", 1);
             params.putInt("capitulo", listaFavoritos.get(index).getCapitulo());
             params.putString("livro", listaFavoritos.get(index).getLivro());
+            params.putInt("idVersiculo", listaFavoritos.get(index).getId_versiculo());
+            params.putInt("qntCapitulos", MainActivity.qntCapitulos(listaFavoritos.get(index).getLivro()));
             intent.putExtras(params);
             startActivity(intent);
         }
@@ -150,6 +188,25 @@ public class ListaFavoritos extends ActionBarActivity {
                 break;
         }*/
         return false;
+    }
+
+    public void alertMessage() {
+        DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
+                    case DialogInterface.BUTTON_POSITIVE:
+                            MyDBHandler db = new MyDBHandler(context, null, null, 1);
+                            db.excluirFavoritos(favoritosParaExcluir);
+                            Intent intent = getIntent();
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                            finish();
+                            startActivity(intent);
+                              break;
+                }
+            }
+        };
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setMessage("Deseja excluir os favoritos selecionados?").setPositiveButton("Sim", dialogClickListener).setNegativeButton("Não", dialogClickListener).show();
     }
 
     public void ShowDialog() {
