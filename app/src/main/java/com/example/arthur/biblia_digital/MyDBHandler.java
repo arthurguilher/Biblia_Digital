@@ -128,6 +128,8 @@ public class MyDBHandler extends SQLiteOpenHelper {
                 Favorito favorito2 = listaFavoritos().get(i);
                 if (!favorito.getLivro().equals(favorito2.getLivro()) && favorito.getCapitulo() != favorito2.getCapitulo()
                         && favorito.getId_versiculo() != favorito2.getId_versiculo()) {
+                    System.out.println(favorito.getLivro() + " " + favorito2.getLivro() + " " + favorito.getCapitulo() + " " + favorito2.getCapitulo() +
+                    favorito.getId_versiculo() + " " + favorito2.getId_versiculo());
                     ContentValues values = new ContentValues();
                     values.put(COLUMN_LIVRO, favorito.getLivro());
                     values.put(COLUMN_CAPITULO, favorito.getCapitulo());

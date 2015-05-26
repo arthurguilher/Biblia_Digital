@@ -1,28 +1,33 @@
 package com.example.arthur.biblia_digital;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.res.AssetManager;
 import android.net.Uri;
+import android.os.Build;
+import android.provider.Telephony;
 import android.speech.RecognizerIntent;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.content.Context;
-import android.os.Build;
 import android.os.Bundle;
-import android.view.Gravity;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.support.v4.widget.DrawerLayout;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ListView;
+import android.widget.ListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,6 +41,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.Collator;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.GregorianCalendar;
@@ -47,8 +53,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 
-public class MainActivity extends ActionBarActivity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks  {
+public class MainActivity extends ActionBarActivity  {
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -74,28 +79,64 @@ public class MainActivity extends ActionBarActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         //context.deleteDatabase("database.db");
-        mNavigationDrawerFragment = (NavigationDrawerFragment)
-                getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
-        mTitle = getTitle();
-        // Set up the drawer.
-        mNavigationDrawerFragment.setUp(
-                R.id.navigation_drawer,
-                (DrawerLayout) findViewById(R.id.drawer_layout));
-
-        //Botão para falar
-        speakButton = (Button) findViewById(R.id.speakButton);
-        speakButton.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-
+        Button botaoLivros = (Button) findViewById(R.id.botao_livros);
+        Button botaoFavoritos = (Button) findViewById(R.id.botao_favoritos);
+        Button botaoBuscaVoz = (Button) findViewById(R.id.botao_busca_voz);
+        Button botaoUltimaLeitura = (Button) findViewById(R.id.botao_ultima_leitura);
+        botaoLivros.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                final String[] items = new String[]{"Ordem natural", "Ordem de A-Z"};
+                final Integer[] icons = new Integer[]{R.drawable.icone_biblia, R.drawable.icone_az};
+                ListAdapter adapter = new MainActivity.ArrayAdapterWithIcon(context, items, icons);
+                new AlertDialog.Builder(context).setTitle("Abrir livros na")
+                        .setAdapter(adapter, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int item) {
+                                Intent intent;
+                                switch (item){
+                                    case 0:
+                                        intent = new Intent(context, ListaLivros.class);
+                                        startActivity(intent);
+                                        break;
+                                    case 1:
+                                        intent = new Intent(context, ListaAZ.class);
+                                        Bundle params = new Bundle();
+                                        params.putStringArrayList("livros", listaLivros);
+                                        intent.putExtras(params);
+                                        startActivity(intent);
+                                        break;
+                                }
+                            }
+                        }).show();
+            }
+        });
+        botaoFavoritos.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent intent = new Intent(context, ListaFavoritos.class);
+                startActivity(intent);
+            }
+        });
+        botaoBuscaVoz.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 startVoiceRecognitionActivity();
             }
-
+        });
+        botaoUltimaLeitura.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                MyDBHandler db = new MyDBHandler(context, null, null, 1);
+                Historico historico = db.ultimoHistorico();
+                Intent intent = new Intent(context, ListaVersiculos.class);
+                Bundle params2 = new Bundle();
+                params2.putInt("busca", 1);
+                params2.putInt("capitulo", historico.getCapitulo());
+                params2.putString("livro", historico.getLivro());
+                params2.putInt("qntCapitulos", qntCapitulos(historico.getLivro()));
+                intent.putExtras(params2);
+                startActivity(intent);
+            }
         });
 
 
-        /******* Ler o XML ********/
+        /******* Carregar o XML ********/
         try {
             AssetManager assetManager = getAssets();
             InputStream is = assetManager.open("biblia.xml");
@@ -123,10 +164,12 @@ public class MainActivity extends ActionBarActivity
         VersiculoDiario ultimoVersiculoDiario = db.ultimoVersiculoDiario();
         if (ultimoVersiculoDiario != null){
         TextView textView = (TextView) findViewById(R.id.versiculoDiario);
-        textView.setText("Versículo do dia: \n" +
-               ultimoVersiculoDiario.getVersiculo() + " \n" + ultimoVersiculoDiario.getLivro() + " " + ultimoVersiculoDiario.getCapitulo() + ":" + ultimoVersiculoDiario.getId_versiculo());
+        textView.setText(ultimoVersiculoDiario.getVersiculo());
 
             }
+        TextView textView2 = (TextView) findViewById(R.id.versiculo);
+        textView2.setText(ultimoVersiculoDiario.getLivro() + " " + ultimoVersiculoDiario.getCapitulo() + ":" + ultimoVersiculoDiario.getId_versiculo());
+        System.out.println("Dia: " + ultimoVersiculoDiario.getDia());
        }
 
     private void startVoiceRecognitionActivity() {
@@ -160,12 +203,114 @@ public class MainActivity extends ActionBarActivity
         int idVersiculo = versiculos.get(0);
         String versiculo = buscarVersiculo(livro, capitulo, idVersiculo);
         MyDBHandler db = new MyDBHandler(context, null, null, 1);
-        VersiculoDiario ultimoVersiculoDiario = db.ultimoVersiculoDiario();
+        final VersiculoDiario ultimoVersiculoDiario = db.ultimoVersiculoDiario();
         if (ultimoVersiculoDiario == null){
             db.adicionarVersiculoDiario(new VersiculoDiario(livro, capitulo, versiculo, idVersiculo, dia, ano));
-        } else if (ultimoVersiculoDiario.getAno() != ano && ultimoVersiculoDiario.getDia() != dia){
+        } else if (ultimoVersiculoDiario.getDia() != dia){
             db.adicionarVersiculoDiario(new VersiculoDiario(livro, capitulo, versiculo, idVersiculo, dia, ano));
         }
+        TextView versiculoDiario = (TextView) findViewById(R.id.versiculoDiario);
+        versiculoDiario.setOnClickListener(new AdapterView.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final String clipboad = "\""+ ultimoVersiculoDiario.getVersiculo() +"\" ("+ultimoVersiculoDiario.getLivro()+" " + ultimoVersiculoDiario.getCapitulo()+":"+(ultimoVersiculoDiario.getId_versiculo())+")" ;
+                final String [] items = new String[] {"Adicionar aos favoritos", "Copiar texto", "Compartilhar"};
+                final Integer[] icons = new Integer[] {R.drawable.icone_favorito,
+                        R.drawable.icone_copiar, R.drawable.icone_compartilhar};
+                ListAdapter adapter = new ArrayAdapterWithIcon(context, items, icons);
+
+                new AlertDialog.Builder(context).setTitle("Opções do versículo diário")
+                        .setAdapter(adapter, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int item) {
+                                switch (item) {
+                                    //Adicionar aos favoritos
+                                    case 0:
+                                        MyDBHandler db = new MyDBHandler(context, null, null, 1);
+                                        Favorito favorito = new Favorito(ultimoVersiculoDiario.getLivro(), ultimoVersiculoDiario.getCapitulo(), ultimoVersiculoDiario.getVersiculo(), ultimoVersiculoDiario.getId_versiculo()-1);
+                                        String msg = "";
+                                        if (db.adicionarFavorito(favorito)) {
+                                            msg = "O versículo foi adicionado aos favoritos";
+                                        } else {
+                                            msg = "Este versículo já está no seus favoritos";
+                                        }
+                                        Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+                                        break;
+                                    //Copiar texto
+                                    case 1:
+                                        ClipboardManager myClipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                                        ClipData myClip = ClipData.newPlainText("text", clipboad);
+                                        myClipboard.setPrimaryClip(myClip);
+                                        Toast.makeText(context, "O texto do versículo foi copiado.", Toast.LENGTH_LONG).show();
+                                        break;
+                                    //Compartilhar
+                                    case 2:
+                                        final String[] items = new String[]{"Facebook", "Gmail", "Mensagem"};
+                                        final Integer[] icons = new Integer[]{R.drawable.icone_facebook, R.drawable.icone_gmail,
+                                                R.drawable.icone_mensagem};
+                                        ListAdapter adapter2 = new ArrayAdapterWithIcon(context, items, icons);
+                                        new AlertDialog.Builder(context).setTitle("Compartilhar via")
+                                                .setAdapter(adapter2, new DialogInterface.OnClickListener() {
+                                                    public void onClick(DialogInterface dialog, int item) {
+                                                        switch (item) {
+                                                            //Facebook
+                                                            case 0:
+                                                                break;
+                                                            //Gmail
+                                                            case 1:
+                                                                try {
+                                                                    Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
+                                                                    emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Versículo para sua meditação");
+                                                                    emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, clipboad);
+                                                                    emailIntent.setType("plain/text");
+                                                                    final PackageManager pm = context.getPackageManager();
+                                                                    final List<ResolveInfo> matches = pm.queryIntentActivities(emailIntent, 0);
+                                                                    ResolveInfo best = null;
+                                                                    for (final ResolveInfo info : matches)
+                                                                        if (info.activityInfo.packageName.endsWith(".gm") ||
+                                                                                info.activityInfo.name.toLowerCase().contains("gmail"))
+                                                                            best = info;
+                                                                    if (best != null)
+                                                                        emailIntent.setClassName(best.activityInfo.packageName, best.activityInfo.name);
+                                                                    startActivity(emailIntent);
+                                                                } catch (Exception e) {
+                                                                    Toast.makeText(context, "Aplicativo do Gmail não localizado.", Toast.LENGTH_LONG).show();
+                                                                }
+                                                                break;
+                                                            //Mensagem
+                                                            case 2:
+                                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) //At least KitKat
+                                                                {
+                                                                    String defaultSmsPackageName = Telephony.Sms.getDefaultSmsPackage(context); //Need to change the build to API 19
+
+                                                                    Intent sendIntent = new Intent(Intent.ACTION_SEND);
+                                                                    sendIntent.setType("text/plain");
+                                                                    sendIntent.putExtra(Intent.EXTRA_TEXT, clipboad);
+
+                                                                    if (defaultSmsPackageName != null)//Can be null in case that there is no default, then the user would be able to choose any app that support this intent.
+                                                                    {
+                                                                        sendIntent.setPackage(defaultSmsPackageName);
+                                                                    }
+                                                                    context.startActivity(sendIntent);
+
+                                                                } else //For early versions, do what worked for you before.
+                                                                {
+                                                                    Intent sendIntent = new Intent(Intent.ACTION_VIEW);
+                                                                    sendIntent.setData(Uri.parse("sms:"));
+                                                                    sendIntent.putExtra("sms_body", clipboad);
+                                                                    context.startActivity(sendIntent);
+                                                                }
+                                                                break;
+                                                        }
+                                                    }
+                                                }).show();
+                                        break;
+
+
+                                }
+                            }
+                        }).show();
+            }
+        });
     }
 
     public String buscarVersiculo(String livro, int capitulo, int idVersiculo){
@@ -253,7 +398,7 @@ public class MainActivity extends ActionBarActivity
         return qntVersiculos;
     }
 
-    @Override
+   /* @Override
     public void onNavigationDrawerItemSelected(int position) {
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getSupportFragmentManager();
@@ -275,8 +420,6 @@ public class MainActivity extends ActionBarActivity
                 params.putStringArrayList("livros", listaLivros);
                 intent.putExtras(params);
                 startActivity(intent);
-                /*fragmentManager.beginTransaction()
-                        .replace(R.id.container, FavoritoFragment.newInstance("string1", "string2")).commit();*/
                 break;
             case 2:
                 mTitle = getString(R.string.title_section3);
@@ -287,8 +430,6 @@ public class MainActivity extends ActionBarActivity
                 mTitle = getString(R.string.title_section4);
                intent = new Intent(this, ListaHistorico.class);
                 startActivity(intent);
-                /*fragmentManager.beginTransaction()
-                        .replace(R.id.container, HistoricoFragment.newInstance("string1", "string2")).commit();*/
                 break;
             case 4:
                 mTitle = getString(R.string.title_section5);
@@ -305,8 +446,7 @@ public class MainActivity extends ActionBarActivity
                 break;
         }
 
-     }
-
+     }*/
 
     @Override
     protected void onActivityResult (int requestCode, int resultCode,Intent intentRetorno){
@@ -415,14 +555,7 @@ public class MainActivity extends ActionBarActivity
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        if (!mNavigationDrawerFragment.isDrawerOpen()) {
-            // Only show items in the action bar relevant to this screen
-            // if the drawer is not showing. Otherwise, let the drawer
-            // decide what to show in the action bar.
-            getMenuInflater().inflate(R.menu.main, menu);
-            restoreActionBar();
-            return true;
-        }
+
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -445,41 +578,30 @@ public class MainActivity extends ActionBarActivity
     /**
      * A placeholder fragment containing a simple view.
      */
-    public static class PlaceholderFragment extends Fragment {
-        /**
-         * The fragment argument representing the section number for this
-         * fragment.
-         */
-        private static final String ARG_SECTION_NUMBER = "section_number";
+    public class ArrayAdapterWithIcon extends ArrayAdapter<String> {
 
-        /**
-         * Returns a new instance of this fragment for the given section
-         * number.
-         */
-        public static PlaceholderFragment newInstance(int sectionNumber) {
-            PlaceholderFragment fragment = new PlaceholderFragment();
-            Bundle args = new Bundle();
-            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-            fragment.setArguments(args);
-            return fragment;
+        private List<Integer> images;
+
+        public ArrayAdapterWithIcon(Context context, List<String> items, List<Integer> images) {
+            super(context, android.R.layout.select_dialog_item, items);
+            this.images = images;
         }
 
-        public PlaceholderFragment() {
+        public ArrayAdapterWithIcon(Context context, String[] items, Integer[] images) {
+            super(context, android.R.layout.select_dialog_item, items);
+            this.images = Arrays.asList(images);
         }
 
         @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            return rootView;
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View view = super.getView(position, convertView, parent);
+            TextView textView = (TextView) view.findViewById(android.R.id.text1);
+            textView.setCompoundDrawablesWithIntrinsicBounds(images.get(position), 0, 0, 0);
+            textView.setCompoundDrawablePadding(
+                    (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12, getContext().getResources().getDisplayMetrics()));
+            return view;
         }
 
-        @Override
-        public void onAttach(Activity activity) {
-            super.onAttach(activity);
-            ((MainActivity) activity).onSectionAttached(
-                    getArguments().getInt(ARG_SECTION_NUMBER));
-        }
     }
 
 }
