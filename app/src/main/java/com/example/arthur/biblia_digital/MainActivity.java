@@ -1,5 +1,6 @@
 package com.example.arthur.biblia_digital;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ClipData;
@@ -9,8 +10,10 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.AssetManager;
+import android.hardware.display.DisplayManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.PowerManager;
 import android.provider.Telephony;
 import android.speech.RecognizerIntent;
 import android.support.v7.app.ActionBarActivity;
@@ -18,7 +21,9 @@ import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.TypedValue;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -30,7 +35,7 @@ import android.widget.Button;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import android.util.DisplayMetrics;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -74,8 +79,11 @@ public class MainActivity extends ActionBarActivity  {
     private int qntCapitulos;
     private boolean aux = false;
 
+    @TargetApi(Build.VERSION_CODES.KITKAT_WATCH)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         //context.deleteDatabase("database.db");
@@ -83,11 +91,30 @@ public class MainActivity extends ActionBarActivity  {
         Button botaoFavoritos = (Button) findViewById(R.id.botao_favoritos);
         Button botaoBuscaVoz = (Button) findViewById(R.id.botao_busca_voz);
         Button botaoUltimaLeitura = (Button) findViewById(R.id.botao_ultima_leitura);
+
+
+        DisplayManager dm = (DisplayManager) context.getSystemService(Context.DISPLAY_SERVICE);
+        for (Display display : dm.getDisplays()) {
+            if (display.getState() != Display.STATE_OFF) {
+                Log.d("Agnno", "display off");
+            }
+            Log.d("Agnno", "display on");
+        }
+       /*
+
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        if (powerManager.isScreenOn()){
+            Log.d("Agnno", "display on");
+        }else{
+            Log.d("Agnno", "display off");
+        }
+        */
+
         botaoLivros.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 final String[] items = new String[]{"Ordem natural", "Ordem de A-Z"};
                 final Integer[] icons = new Integer[]{R.drawable.icone_biblia, R.drawable.icone_az};
-                ListAdapter adapter = new MainActivity.ArrayAdapterWithIcon(context, items, icons);
+                ListAdapter adapter = new ArrayAdapterWithIcon(context, items, icons);
                 new AlertDialog.Builder(context).setTitle("Abrir livros na")
                         .setAdapter(adapter, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int item) {
@@ -159,6 +186,7 @@ public class MainActivity extends ActionBarActivity  {
         } catch (SAXException e) {
             System.out.println(e.getMessage());
         }
+
         versiculoDiario();
         MyDBHandler db = new MyDBHandler(context, null, null, 1);
         VersiculoDiario ultimoVersiculoDiario = db.ultimoVersiculoDiario();
@@ -180,138 +208,212 @@ public class MainActivity extends ActionBarActivity  {
     }
 
     public void versiculoDiario() {
+        TextView versiculoDiario;
+        MyDBHandler db ;
+        final VersiculoDiario ultimoVersiculoDiario;
         GregorianCalendar date = new GregorianCalendar();
         int dia = date.get(Calendar.DAY_OF_YEAR);
+        int hoje = dia;
         int ano = date.get(Calendar.YEAR);
-        ArrayList<String> livros = new ArrayList<String>();
-        for (int i = 0; i < listaLivros.size(); i++){
-            livros.add(listaLivros.get(i));
+        if(hoje > 350){
+            hoje = 25;
+            Log.d("Agnno", "Hoje1: " + dia);
+        }else{
+            hoje = 26;
+            Log.d("Agnno", "Hoje2: " + dia);
         }
-        Collections.shuffle(livros);
-        String livro = livros.get(0);
-        ArrayList<Integer> capitulos = new ArrayList<Integer>();
-        for (int i = 1; i < qntCapitulos(livro)+1; i++) {
-            capitulos.add(i);
+        switch(hoje) {
+            case 25:
+                Log.d("Agnno", "Natal chegando!!");
+                ArrayList<String> books = new ArrayList<String>();
+                books.add("Mateus");
+
+                books.add("Marcos");
+
+                books.add("Lucas");
+
+                books.add("João");
+                Log.d("Agnno", "1");
+                Collections.shuffle(books);
+
+                String book = books.get(0);
+                ArrayList<Integer> capters = new ArrayList<Integer>();
+                for (int i = 1; i < 4; i++) {
+                    capters.add(i);
+                }
+                Log.d("Agnno", "2");
+                Collections.shuffle(capters);
+                int capter = capters.get(0);
+                ArrayList<Integer> verses = new ArrayList<Integer>();
+                for (int i = 1; i < 10 + 1; i++) {
+                    verses.add(i);
+                }
+                Log.d("Agnno", "3");
+                Collections.shuffle(verses);
+                Log.d("Agnno", "4");
+                int idVerse = verses.get(0);
+                Log.d("Agnno", "Versiculo Escolhido");
+                String debug = (book + "," + capter + "," + idVerse);
+                Log.d("Agnno", debug);
+                String verse = buscarVersiculo(book, capter, idVerse);
+                Log.d("Agnno", verse);
+
+                db = new MyDBHandler(context, null, null, 1);
+                ultimoVersiculoDiario = db.ultimoVersiculoDiario();
+                System.out.println(books + " " + capter + " " + idVerse);
+                if (ultimoVersiculoDiario == null) {
+                    db.adicionarVersiculoDiario(new VersiculoDiario(book, capter, verse, idVerse, dia, ano));
+                } else if (ultimoVersiculoDiario.getDia() != dia) {
+                    System.out.println(ultimoVersiculoDiario.getDia() + " " + dia);
+                    db.adicionarVersiculoDiario(new VersiculoDiario(book, capter, verse, idVerse, dia, ano));
+                }
+                versiculoDiario = (TextView) findViewById(R.id.versiculoDiario);
+                break;
+            case 26:
+                Log.d("Agnno", "Uma Dia Comum");
+                Log.d("Agnno", "Hoje: " + hoje);
+                ArrayList<String> livros = new ArrayList<String>();
+                for (int i = 0; i < listaLivros.size(); i++) {
+                    livros.add(listaLivros.get(i));
+
+                }
+                Collections.shuffle(livros);
+                String livro = livros.get(0);
+                ArrayList<Integer> capitulos = new ArrayList<Integer>();
+                for (int i = 1; i < qntCapitulos(livro) + 1; i++) {
+                    capitulos.add(i);
+                }
+                Collections.shuffle(capitulos);
+                int capitulo = capitulos.get(0);
+                ArrayList<Integer> versiculos = new ArrayList<Integer>();
+                for (int i = 1; i < qntVersiculos(livro, capitulo) + 1; i++) {
+                    versiculos.add(i);
+                }
+                Collections.shuffle(versiculos);
+                int idVersiculo = versiculos.get(0);
+                String versiculo = buscarVersiculo(livro, capitulo, idVersiculo);
+                db = new MyDBHandler(context, null, null, 1);
+                ultimoVersiculoDiario = db.ultimoVersiculoDiario();
+                System.out.println(livro + " " + capitulo + " " + idVersiculo);
+                if (ultimoVersiculoDiario == null) {
+                    db.adicionarVersiculoDiario(new VersiculoDiario(livro, capitulo, versiculo, idVersiculo, dia, ano));
+                } else if (ultimoVersiculoDiario.getDia() != dia) {
+                    System.out.println(ultimoVersiculoDiario.getDia() + " " + dia);
+                    db.adicionarVersiculoDiario(new VersiculoDiario(livro, capitulo, versiculo, idVersiculo, dia, ano));
+                }
+                versiculoDiario = (TextView) findViewById(R.id.versiculoDiario);
+                break;
+            default:
+                Log.d("Agnno", "Deu Merda!!");
+                db = new MyDBHandler(context, null, null, 1);
+                ultimoVersiculoDiario = db.ultimoVersiculoDiario();
+                db.adicionarVersiculoDiario(new VersiculoDiario("Gênesis", 1, "No princípio criou Deus os céus e a terra.", 1, dia, ano));
+                versiculoDiario = (TextView) findViewById(R.id.versiculoDiario);
         }
-        Collections.shuffle(capitulos);
-        int capitulo = capitulos.get(0);
-        ArrayList<Integer> versiculos = new ArrayList<Integer>();
-        for (int i = 1; i < qntVersiculos(livro, capitulo)+1; i++) {
-            versiculos.add(i);
-        }
-        Collections.shuffle(versiculos);
-        int idVersiculo = versiculos.get(0);
-        String versiculo = buscarVersiculo(livro, capitulo, idVersiculo);
-        MyDBHandler db = new MyDBHandler(context, null, null, 1);
-        final VersiculoDiario ultimoVersiculoDiario = db.ultimoVersiculoDiario();
-        if (ultimoVersiculoDiario == null){
-            db.adicionarVersiculoDiario(new VersiculoDiario(livro, capitulo, versiculo, idVersiculo, dia, ano));
-        } else if (ultimoVersiculoDiario.getDia() != dia){
-            db.adicionarVersiculoDiario(new VersiculoDiario(livro, capitulo, versiculo, idVersiculo, dia, ano));
-        }
-        TextView versiculoDiario = (TextView) findViewById(R.id.versiculoDiario);
+
+
         versiculoDiario.setOnClickListener(new AdapterView.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final String clipboad = "\""+ ultimoVersiculoDiario.getVersiculo() +"\" ("+ultimoVersiculoDiario.getLivro()+" " + ultimoVersiculoDiario.getCapitulo()+":"+(ultimoVersiculoDiario.getId_versiculo())+")" ;
-                final String [] items = new String[] {"Adicionar aos favoritos", "Copiar texto", "Compartilhar"};
-                final Integer[] icons = new Integer[] {R.drawable.icone_favorito,
-                        R.drawable.icone_copiar, R.drawable.icone_compartilhar};
-                ListAdapter adapter = new ArrayAdapterWithIcon(context, items, icons);
+                    @Override
+                    public void onClick(View v) {
+                        final String clipboad = "\"" + ultimoVersiculoDiario.getVersiculo() + "\" (" + ultimoVersiculoDiario.getLivro() + " " + ultimoVersiculoDiario.getCapitulo() + ":" + (ultimoVersiculoDiario.getId_versiculo()) + ")";
+                        final String[] items = new String[]{"Adicionar aos favoritos", "Copiar texto", "Compartilhar"};
+                        final Integer[] icons = new Integer[]{R.drawable.icone_favorito,
+                                R.drawable.icone_copiar, R.drawable.icone_compartilhar};
+                        ListAdapter adapter = new ArrayAdapterWithIcon(context, items, icons);
 
-                new AlertDialog.Builder(context).setTitle("Opções do versículo diário")
-                        .setAdapter(adapter, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int item) {
-                                switch (item) {
-                                    //Adicionar aos favoritos
-                                    case 0:
-                                        MyDBHandler db = new MyDBHandler(context, null, null, 1);
-                                        Favorito favorito = new Favorito(ultimoVersiculoDiario.getLivro(), ultimoVersiculoDiario.getCapitulo(), ultimoVersiculoDiario.getVersiculo(), ultimoVersiculoDiario.getId_versiculo()-1);
-                                        String msg = "";
-                                        if (db.adicionarFavorito(favorito)) {
-                                            msg = "O versículo foi adicionado aos favoritos";
-                                        } else {
-                                            msg = "Este versículo já está no seus favoritos";
+                        new AlertDialog.Builder(context).setTitle("Opções do versículo diário")
+                                .setAdapter(adapter, new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int item) {
+                                        switch (item) {
+                                            //Adicionar aos favoritos
+                                            case 0:
+                                                MyDBHandler db = new MyDBHandler(context, null, null, 1);
+                                                Favorito favorito = new Favorito(ultimoVersiculoDiario.getLivro(), ultimoVersiculoDiario.getCapitulo(), ultimoVersiculoDiario.getVersiculo(), ultimoVersiculoDiario.getId_versiculo() - 1);
+                                                String msg = "";
+                                                if (db.adicionarFavorito(favorito)) {
+                                                    msg = "O versículo foi adicionado aos favoritos";
+                                                } else {
+                                                    msg = "Este versículo já está no seus favoritos";
+                                                }
+                                                Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+                                                break;
+                                            //Copiar texto
+                                            case 1:
+                                                ClipboardManager myClipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                                                ClipData myClip = ClipData.newPlainText("text", clipboad);
+                                                myClipboard.setPrimaryClip(myClip);
+                                                Toast.makeText(context, "O texto do versículo foi copiado.", Toast.LENGTH_LONG).show();
+                                                break;
+                                            //Compartilhar
+                                            case 2:
+                                                final String[] items = new String[]{"Facebook", "Gmail", "Mensagem"};
+                                                final Integer[] icons = new Integer[]{R.drawable.icone_facebook, R.drawable.icone_gmail,
+                                                        R.drawable.icone_mensagem};
+                                                ListAdapter adapter2 = new ArrayAdapterWithIcon(context, items, icons);
+                                                new AlertDialog.Builder(context).setTitle("Compartilhar via")
+                                                        .setAdapter(adapter2, new DialogInterface.OnClickListener() {
+                                                            public void onClick(DialogInterface dialog, int item) {
+                                                                switch (item) {
+                                                                    //Facebook
+                                                                    case 0:
+                                                                        break;
+                                                                    //Gmail
+                                                                    case 1:
+                                                                        try {
+                                                                            Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
+                                                                            emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Versículo para sua meditação");
+                                                                            emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, clipboad);
+                                                                            emailIntent.setType("plain/text");
+                                                                            final PackageManager pm = context.getPackageManager();
+                                                                            final List<ResolveInfo> matches = pm.queryIntentActivities(emailIntent, 0);
+                                                                            ResolveInfo best = null;
+                                                                            for (final ResolveInfo info : matches)
+                                                                                if (info.activityInfo.packageName.endsWith(".gm") ||
+                                                                                        info.activityInfo.name.toLowerCase().contains("gmail"))
+                                                                                    best = info;
+                                                                            if (best != null)
+                                                                                emailIntent.setClassName(best.activityInfo.packageName, best.activityInfo.name);
+                                                                            startActivity(emailIntent);
+                                                                        } catch (Exception e) {
+                                                                            Toast.makeText(context, "Aplicativo do Gmail não localizado.", Toast.LENGTH_LONG).show();
+                                                                        }
+                                                                        break;
+                                                                    //Mensagem
+                                                                    case 2:
+                                                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) //At least KitKat
+                                                                        {
+                                                                            String defaultSmsPackageName = Telephony.Sms.getDefaultSmsPackage(context); //Need to change the build to API 19
+
+                                                                            Intent sendIntent = new Intent(Intent.ACTION_SEND);
+                                                                            sendIntent.setType("text/plain");
+                                                                            sendIntent.putExtra(Intent.EXTRA_TEXT, clipboad);
+
+                                                                            if (defaultSmsPackageName != null)//Can be null in case that there is no default, then the user would be able to choose any app that support this intent.
+                                                                            {
+                                                                                sendIntent.setPackage(defaultSmsPackageName);
+                                                                            }
+                                                                            context.startActivity(sendIntent);
+
+                                                                        } else //For early versions, do what worked for you before.
+                                                                        {
+                                                                            Intent sendIntent = new Intent(Intent.ACTION_VIEW);
+                                                                            sendIntent.setData(Uri.parse("sms:"));
+                                                                            sendIntent.putExtra("sms_body", clipboad);
+                                                                            context.startActivity(sendIntent);
+                                                                        }
+                                                                        break;
+                                                                }
+                                                            }
+                                                        }).show();
+                                                break;
+
+
                                         }
-                                        Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
-                                        break;
-                                    //Copiar texto
-                                    case 1:
-                                        ClipboardManager myClipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
-                                        ClipData myClip = ClipData.newPlainText("text", clipboad);
-                                        myClipboard.setPrimaryClip(myClip);
-                                        Toast.makeText(context, "O texto do versículo foi copiado.", Toast.LENGTH_LONG).show();
-                                        break;
-                                    //Compartilhar
-                                    case 2:
-                                        final String[] items = new String[]{"Facebook", "Gmail", "Mensagem"};
-                                        final Integer[] icons = new Integer[]{R.drawable.icone_facebook, R.drawable.icone_gmail,
-                                                R.drawable.icone_mensagem};
-                                        ListAdapter adapter2 = new ArrayAdapterWithIcon(context, items, icons);
-                                        new AlertDialog.Builder(context).setTitle("Compartilhar via")
-                                                .setAdapter(adapter2, new DialogInterface.OnClickListener() {
-                                                    public void onClick(DialogInterface dialog, int item) {
-                                                        switch (item) {
-                                                            //Facebook
-                                                            case 0:
-                                                                break;
-                                                            //Gmail
-                                                            case 1:
-                                                                try {
-                                                                    Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
-                                                                    emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Versículo para sua meditação");
-                                                                    emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, clipboad);
-                                                                    emailIntent.setType("plain/text");
-                                                                    final PackageManager pm = context.getPackageManager();
-                                                                    final List<ResolveInfo> matches = pm.queryIntentActivities(emailIntent, 0);
-                                                                    ResolveInfo best = null;
-                                                                    for (final ResolveInfo info : matches)
-                                                                        if (info.activityInfo.packageName.endsWith(".gm") ||
-                                                                                info.activityInfo.name.toLowerCase().contains("gmail"))
-                                                                            best = info;
-                                                                    if (best != null)
-                                                                        emailIntent.setClassName(best.activityInfo.packageName, best.activityInfo.name);
-                                                                    startActivity(emailIntent);
-                                                                } catch (Exception e) {
-                                                                    Toast.makeText(context, "Aplicativo do Gmail não localizado.", Toast.LENGTH_LONG).show();
-                                                                }
-                                                                break;
-                                                            //Mensagem
-                                                            case 2:
-                                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) //At least KitKat
-                                                                {
-                                                                    String defaultSmsPackageName = Telephony.Sms.getDefaultSmsPackage(context); //Need to change the build to API 19
-
-                                                                    Intent sendIntent = new Intent(Intent.ACTION_SEND);
-                                                                    sendIntent.setType("text/plain");
-                                                                    sendIntent.putExtra(Intent.EXTRA_TEXT, clipboad);
-
-                                                                    if (defaultSmsPackageName != null)//Can be null in case that there is no default, then the user would be able to choose any app that support this intent.
-                                                                    {
-                                                                        sendIntent.setPackage(defaultSmsPackageName);
-                                                                    }
-                                                                    context.startActivity(sendIntent);
-
-                                                                } else //For early versions, do what worked for you before.
-                                                                {
-                                                                    Intent sendIntent = new Intent(Intent.ACTION_VIEW);
-                                                                    sendIntent.setData(Uri.parse("sms:"));
-                                                                    sendIntent.putExtra("sms_body", clipboad);
-                                                                    context.startActivity(sendIntent);
-                                                                }
-                                                                break;
-                                                        }
-                                                    }
-                                                }).show();
-                                        break;
-
-
-                                }
-                            }
-                        }).show();
-            }
-        });
-    }
+                                    }
+                                }).show();
+                    }
+                });
+        }
 
     public String buscarVersiculo(String livro, int capitulo, int idVersiculo){
        String versiculo = "";
@@ -343,6 +445,7 @@ public class MainActivity extends ActionBarActivity  {
                 }
             }
         }
+        Log.d("Agnno", "Versiculo Encontrado!");
         return versiculo;
     }
 
