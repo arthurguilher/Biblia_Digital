@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Biblia Digital</string>
+    <string name="app_name">Biblia</string>
 
     <string name="title_section1">Livros na ordem natural</string>
     <string name="title_section2">Livros de A-Z</string>
@@ -31,6 +31,6 @@
 
 <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="title_activity_tela_inicial">TelaInicial</string>
+    <string name="title_activity_tela_inicial">Biblia</string>
 
 </resources>

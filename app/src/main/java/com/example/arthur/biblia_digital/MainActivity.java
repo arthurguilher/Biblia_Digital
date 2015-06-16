@@ -52,6 +52,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import static com.example.arthur.biblia_digital.MainActivity.nodeCapitulos;
+
 
 public class MainActivity extends ActionBarActivity  {
 
@@ -191,28 +193,62 @@ public class MainActivity extends ActionBarActivity  {
         String livro = "";
         int capitulo = 0;
         int idVersiculo = 0;
-
         if (dia >= 350 && dia <= 360) {
-            livros.add("Mateus");
-            livros.add("Isaías");
-            livros.add("Lucas");
-            livros.add("João");
+            livros.add(listaLivros.get(39));
+            livros.add(listaLivros.get(22));
+            livros.add(listaLivros.get(41));
 
             Collections.shuffle(livros);
-            switch (livros.get(0)){
-                case "Mateus":
-                    capitulos.add(1);
+            livro = livros.get(0);
+            System.out.println(" ************** " + livro);
+            if (livro.equalsIgnoreCase("Mateus")) {
+                capitulos.add(1);
+                capitulos.add(2);
+                Collections.shuffle(capitulos);
+                capitulo = capitulos.get(0);
+                if (capitulo == 1) {
+                    idVersiculo = 21;
+                } else {
+                    idVersiculo = 10;
+                }
+            } else if (livro.equalsIgnoreCase("Isaías")) {
+                //break;
+                //case "Isaías":
+                capitulos.add(7);
+                capitulos.add(9);
+                Collections.shuffle(capitulos);
+                capitulo = capitulos.get(0);
+                if (capitulo == 7) {
+                    idVersiculo = 14;
+                } else {
+                    idVersiculo = 6;
+                }
+                // break;
+            } else {
+                //case "Lucas":
                     capitulos.add(2);
+                    capitulos.add(1);
                     Collections.shuffle(capitulos);
                     capitulo = capitulos.get(0);
-                    if (capitulo == 1){
-                        idVersiculo = 21;
-                    } else {
-                        idVersiculo = 10;
-                    }
-                case "Isaías":
+                    if (capitulo == 2) {
+                        versiculos.add(30);
+                        versiculos.add(31);
+                        versiculos.add(35);
 
+                    } else {
+                        versiculos.add(10);
+                        versiculos.add(11);
+                        versiculos.add(12);
+                        versiculos.add(15);
+                        versiculos.add(20);
+                    }
+                    Collections.shuffle(versiculos);
+                    idVersiculo = versiculos.get(0);
+                    //break;
             }
+
+            qntCapitulos(livro);
+            qntVersiculos(livro, capitulo);
 
         } else {
             for (int i = 0; i < listaLivros.size(); i++){
@@ -234,7 +270,8 @@ public class MainActivity extends ActionBarActivity  {
             Collections.shuffle(versiculos);
             idVersiculo = versiculos.get(0);
         }
-
+        System.out.println("############# " + nodeCapitulos.getLength());
+        //System.out.println("************  " + livro + " " + capitulo + " " + idVersiculo);
         String versiculo = buscarVersiculo(livro, capitulo, idVersiculo);
         MyDBHandler db = new MyDBHandler(context, null, null, 1);
         final VersiculoDiario ultimoVersiculoDiario = db.ultimoVersiculoDiario();
@@ -355,6 +392,7 @@ public class MainActivity extends ActionBarActivity  {
             if (nNode.getNodeType() == Node.ELEMENT_NODE) {
                 Element eElement = (Element) nNode;
                 if (eElement.getAttribute("n").equalsIgnoreCase(livro.toLowerCase())) {
+                    System.out.println(" %%%%%%%%%%%%%% " + livro.toLowerCase() + " " + nodeCapitulos.getLength());
                     for (int i = 0; i < nodeCapitulos.getLength(); i++) {
                         Node nNode2 = nodeCapitulos.item(i);
                         if (nNode2.getNodeType() == Node.ELEMENT_NODE) {
