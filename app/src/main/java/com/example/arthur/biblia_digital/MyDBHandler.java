@@ -112,6 +112,7 @@ public class MyDBHandler extends SQLiteOpenHelper {
 
     public boolean adicionarFavorito(Favorito favorito) {
 
+        boolean aux = true;
         if (listaFavoritos().isEmpty()){
             ContentValues values = new ContentValues();
             values.put(COLUMN_LIVRO, favorito.getLivro());
@@ -125,22 +126,26 @@ public class MyDBHandler extends SQLiteOpenHelper {
             return true;
         } else {
             for (int i = 0; i < listaFavoritos().size(); i++) {
-                Favorito favorito2 = listaFavoritos().get(i);
-                if (!favorito.getLivro().equals(favorito2.getLivro()) && favorito.getCapitulo() != favorito2.getCapitulo()
-                        && favorito.getId_versiculo() != favorito2.getId_versiculo()) {
-                    System.out.println(favorito.getLivro() + " " + favorito2.getLivro() + " " + favorito.getCapitulo() + " " + favorito2.getCapitulo() +
-                    favorito.getId_versiculo() + " " + favorito2.getId_versiculo());
-                    ContentValues values = new ContentValues();
-                    values.put(COLUMN_LIVRO, favorito.getLivro());
-                    values.put(COLUMN_CAPITULO, favorito.getCapitulo());
-                    values.put(COLUMN_VERSICULO, favorito.getVersiculo());
-                    values.put(COLUMN_ID_VERSICULO, favorito.getId_versiculo());
-
-                    SQLiteDatabase db = this.getWritableDatabase();
-                    db.insert(TABLE_FAVORITOS, null, values);
-                    db.close();
-                    return true;
+                Favorito favoritoAntigo = listaFavoritos().get(i);
+                if (favorito.getLivro().equals(favoritoAntigo.getLivro()) && favorito.getCapitulo() == favoritoAntigo.getCapitulo()
+                        && favorito.getId_versiculo() == favoritoAntigo.getId_versiculo()) {
+                    System.out.println(favorito.getLivro() + " " + favoritoAntigo.getLivro() + " " + favorito.getCapitulo() + " " + favoritoAntigo.getCapitulo() + " " +
+                    favorito.getId_versiculo() + " " + favoritoAntigo.getId_versiculo());
+                    aux = false;
                 }
+            }
+            System.out.println(aux);
+            if (aux) {
+                ContentValues values = new ContentValues();
+                values.put(COLUMN_LIVRO, favorito.getLivro());
+                values.put(COLUMN_CAPITULO, favorito.getCapitulo());
+                values.put(COLUMN_VERSICULO, favorito.getVersiculo());
+                values.put(COLUMN_ID_VERSICULO, favorito.getId_versiculo());
+
+                SQLiteDatabase db = this.getWritableDatabase();
+                db.insert(TABLE_FAVORITOS, null, values);
+                db.close();
+                return true;
             }
         }
         return false;

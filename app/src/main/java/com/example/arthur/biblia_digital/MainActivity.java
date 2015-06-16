@@ -175,6 +175,8 @@ public class MainActivity extends ActionBarActivity  {
     private void startVoiceRecognitionActivity() {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, "pt-BR");
+        intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
+
         intent.putExtra(RecognizerIntent.EXTRA_PROMPT,"Fale agora...");
         startActivityForResult(intent, REQUEST_CODE);
     }
@@ -184,23 +186,55 @@ public class MainActivity extends ActionBarActivity  {
         int dia = date.get(Calendar.DAY_OF_YEAR);
         int ano = date.get(Calendar.YEAR);
         ArrayList<String> livros = new ArrayList<String>();
-        for (int i = 0; i < listaLivros.size(); i++){
-            livros.add(listaLivros.get(i));
-        }
-        Collections.shuffle(livros);
-        String livro = livros.get(0);
         ArrayList<Integer> capitulos = new ArrayList<Integer>();
-        for (int i = 1; i < qntCapitulos(livro)+1; i++) {
-            capitulos.add(i);
-        }
-        Collections.shuffle(capitulos);
-        int capitulo = capitulos.get(0);
         ArrayList<Integer> versiculos = new ArrayList<Integer>();
-        for (int i = 1; i < qntVersiculos(livro, capitulo)+1; i++) {
-            versiculos.add(i);
+        String livro = "";
+        int capitulo = 0;
+        int idVersiculo = 0;
+
+        if (dia >= 350 && dia <= 360) {
+            livros.add("Mateus");
+            livros.add("Isaías");
+            livros.add("Lucas");
+            livros.add("João");
+
+            Collections.shuffle(livros);
+            switch (livros.get(0)){
+                case "Mateus":
+                    capitulos.add(1);
+                    capitulos.add(2);
+                    Collections.shuffle(capitulos);
+                    capitulo = capitulos.get(0);
+                    if (capitulo == 1){
+                        idVersiculo = 21;
+                    } else {
+                        idVersiculo = 10;
+                    }
+                case "Isaías":
+
+            }
+
+        } else {
+            for (int i = 0; i < listaLivros.size(); i++){
+                livros.add(listaLivros.get(i));
+            }
+
+            Collections.shuffle(livros);
+            livro = livros.get(0);
+
+            for (int i = 1; i < qntCapitulos(livro)+1; i++) {
+                capitulos.add(i);
+            }
+            Collections.shuffle(capitulos);
+            capitulo = capitulos.get(0);
+
+            for (int i = 1; i < qntVersiculos(livro, capitulo)+1; i++) {
+                versiculos.add(i);
+            }
+            Collections.shuffle(versiculos);
+            idVersiculo = versiculos.get(0);
         }
-        Collections.shuffle(versiculos);
-        int idVersiculo = versiculos.get(0);
+
         String versiculo = buscarVersiculo(livro, capitulo, idVersiculo);
         MyDBHandler db = new MyDBHandler(context, null, null, 1);
         final VersiculoDiario ultimoVersiculoDiario = db.ultimoVersiculoDiario();
@@ -453,65 +487,115 @@ public class MainActivity extends ActionBarActivity  {
 
         Intent intent;
 
-        if (requestCode == REQUEST_CODE && resultCode == RESULT_OK) {
-
-            ArrayList<String> matches = intentRetorno.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-            String resultadoQuebrado[] = matches.get(0).toLowerCase().split(" ");
-
-            contemLivro(resultadoQuebrado[0]);
-            //System.out.println(livro);
-
-            if (resultadoQuebrado.length == 1 && contemLivro(resultadoQuebrado[0])){
+        if (resultCode == RESULT_OK) {
 
 
-                intent = new Intent(context, ListaCapitulos.class);
-                Bundle params = new Bundle();
-                params.putString("livro", livro);
-                intent.putExtras(params);
-                startActivity(intent);
-            }
+            if (requestCode == REQUEST_CODE) {
 
-            if (resultadoQuebrado.length == 3 && (resultadoQuebrado[1].equals("capitulo") || resultadoQuebrado[1].equals("capítulo"))){
+                ArrayList<String> matches = intentRetorno.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                String resultadoQuebrado[] = matches.get(0).toLowerCase().split(" ");
 
-                for (int temp = 0; temp < MainActivity.nodeLivros.getLength(); temp++) {
-                    Node nNode = MainActivity.nodeLivros.item(temp);
-                    if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-                        Element eElement = (Element) nNode;
-                        if (eElement.getAttribute("n").equalsIgnoreCase(livro)) {
-                            nodeCapitulos = eElement.getChildNodes();
-                            for (int i = 0; i < nodeCapitulos.getLength(); i++) {
-                                Node nNode2 = nodeCapitulos.item(i);
-                                if (nNode2.getNodeType() == Node.ELEMENT_NODE) {
-                                    //element = (Element) nNode2;
-                                    qntCapitulos++;
+                Toast.makeText(context, matches.get(0), Toast.LENGTH_LONG).show();
+
+                //Se falar apenas o nome do livro
+                if (resultadoQuebrado.length == 1 && contemLivro(resultadoQuebrado[0])) {
+
+                    intent = new Intent(context, ListaCapitulos.class);
+                    Bundle params = new Bundle();
+                    params.putString("livro", livro);
+                    intent.putExtras(params);
+                    startActivity(intent);
+                }
+                //Se falar o nome do livro e a palavra "capítulo"
+                if (contemLivro(resultadoQuebrado[0]) && resultadoQuebrado.length == 3
+                        && (resultadoQuebrado[1].equals("capitulo") || resultadoQuebrado[1].equals("capítulo"))) {
+
+                    for (int temp = 0; temp < MainActivity.nodeLivros.getLength(); temp++) {
+                        Node nNode = MainActivity.nodeLivros.item(temp);
+                        if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+                            Element eElement = (Element) nNode;
+                            if (eElement.getAttribute("n").equalsIgnoreCase(livro)) {
+                                nodeCapitulos = eElement.getChildNodes();
+                                for (int i = 0; i < nodeCapitulos.getLength(); i++) {
+                                    Node nNode2 = nodeCapitulos.item(i);
+                                    if (nNode2.getNodeType() == Node.ELEMENT_NODE) {
+                                        //element = (Element) nNode2;
+                                        qntCapitulos++;
+                                    }
                                 }
+                                break;
                             }
-                            break;
                         }
+                    }
+                    try {
+                        if (Integer.parseInt(resultadoQuebrado[2]) > 0 && Integer.parseInt(resultadoQuebrado[2]) <= qntCapitulos) {
+                            intent = new Intent(context, ListaVersiculos.class);
+                            Bundle params = new Bundle();
+                            params.putInt("busca", 1);
+                            params.putString("livro", livro);
+                            params.putInt("qntCapitulos", qntCapitulos);
+                            params.putInt("capitulo", Integer.parseInt(resultadoQuebrado[2]));
+                            intent.putExtras(params);
+                            startActivity(intent);
+                        } else {
+                            Toast.makeText(context, "Capítulo inválido", Toast.LENGTH_LONG).show();
+                        }
+                    }catch (NumberFormatException e){
+                        e.printStackTrace();
+                    }
+
+                }
+
+                //Se falar o nome do livro e o capítulo (apenas o número)
+                if (resultadoQuebrado.length == 2 && contemLivro(resultadoQuebrado[0])) {
+
+                    for (int temp = 0; temp < MainActivity.nodeLivros.getLength(); temp++) {
+                        Node nNode = MainActivity.nodeLivros.item(temp);
+                        if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+                            Element eElement = (Element) nNode;
+                            if (eElement.getAttribute("n").equalsIgnoreCase(livro)) {
+                                nodeCapitulos = eElement.getChildNodes();
+                                for (int i = 0; i < nodeCapitulos.getLength(); i++) {
+                                    Node nNode2 = nodeCapitulos.item(i);
+                                    if (nNode2.getNodeType() == Node.ELEMENT_NODE) {
+                                        //element = (Element) nNode2;
+                                        qntCapitulos++;
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    try {
+                        if (Integer.parseInt(resultadoQuebrado[1]) > 0 && Integer.parseInt(resultadoQuebrado[1]) <= qntCapitulos) {
+                            intent = new Intent(context, ListaVersiculos.class);
+                            Bundle params = new Bundle();
+                            params.putInt("busca", 1);
+                            params.putString("livro", livro);
+                            params.putInt("qntCapitulos", qntCapitulos);
+                            params.putInt("capitulo", Integer.parseInt(resultadoQuebrado[1]));
+                            intent.putExtras(params);
+                            startActivity(intent);
+                        } else {
+                            Toast.makeText(context, "Capítulo inválido", Toast.LENGTH_LONG).show();
+                        }
+                    } catch (NumberFormatException e){
+                        e.printStackTrace();
                     }
                 }
 
-                intent = new Intent(context, ListaVersiculos.class);
-                Bundle params = new Bundle();
-                params.putInt("busca", 1);
-                params.putString("livro", livro);
-                params.putInt("qntCapitulos", qntCapitulos);
-                params.putInt("capitulo", Integer.parseInt(resultadoQuebrado[2]));
-                intent.putExtras(params);
-                startActivity(intent);
-
-            }
-
-            if (resultadoQuebrado.length == 2 && contemLivro(resultadoQuebrado[0])){
-                intent = new Intent(context, ListaVersiculos.class);
-                Bundle params = new Bundle();
-                params.putString("livro", livro);
-                params.putInt("capitulo", Integer.parseInt(resultadoQuebrado[1]));
-                intent.putExtras(params);
-                startActivity(intent);
-            }
-
-            Toast.makeText(context, "Erro ao buscar: " + matches.get(0), Toast.LENGTH_LONG).show();
+                //Toast.makeText(context, "Erro ao buscar: " + matches.get(0), Toast.LENGTH_LONG).show();
+            } else if (resultCode == RecognizerIntent.RESULT_AUDIO_ERROR) {
+                Toast.makeText(context, "Audio Error", Toast.LENGTH_LONG).show();
+        } else if (resultCode == RecognizerIntent.RESULT_CLIENT_ERROR) {
+                Toast.makeText(context, "Client Error", Toast.LENGTH_LONG).show();
+        } else if (resultCode == RecognizerIntent.RESULT_NETWORK_ERROR) {
+                Toast.makeText(context, "Network Error", Toast.LENGTH_LONG).show();
+        } else if (resultCode == RecognizerIntent.RESULT_NO_MATCH) {
+                Toast.makeText(context, "No match", Toast.LENGTH_LONG).show();
+        } else if (resultCode == RecognizerIntent.RESULT_SERVER_ERROR) {
+                Toast.makeText(context, "Server Error", Toast.LENGTH_LONG).show();
+        }
         }
 
     }

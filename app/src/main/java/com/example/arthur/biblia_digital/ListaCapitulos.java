@@ -2,6 +2,10 @@ package com.example.arthur.biblia_digital;
 
 import android.content.Context;
 import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
@@ -9,12 +13,15 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -23,7 +30,7 @@ import org.w3c.dom.NodeList;
 import java.util.ArrayList;
 
 
-public class ListaCapitulos extends ActionBarActivity {
+public class ListaCapitulos extends ActionBarActivity implements SensorEventListener{
 
     public static String livro = "";
     public static int qntCapitulos;
@@ -38,6 +45,14 @@ public class ListaCapitulos extends ActionBarActivity {
     private ArrayList<String> listaLivros = new ArrayList<String>();
     private int ordenado = 0;
     private String livroAnterior = "";
+    public static final int TIPO_SENSOR = Sensor.TYPE_ACCELEROMETER;
+    private SensorManager sensorManager;
+    private Sensor sensor;
+    private float valorAnteriorX = 0;
+    private float valorAnteriorY = 0;
+    private float x = 0;
+    private float y = 0;
+    private float z = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +66,13 @@ public class ListaCapitulos extends ActionBarActivity {
         livro = params.getString("livro");
         ordenado = params.getInt("ordenado");
         setTitle("  " + livro);
+
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        sensor = sensorManager.getDefaultSensor(TIPO_SENSOR);
+        if(sensor == null) {
+            System.out.println("Sensor não disponível");
+            Toast.makeText(this, "sensor nao disponível", Toast.LENGTH_LONG).show();
+        }
 
         if (ordenado == 0){
             listaLivros = MainActivity.listaLivros;
@@ -155,6 +177,58 @@ public class ListaCapitulos extends ActionBarActivity {
         return qntCapitulos;
     }
 
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+
+
+        valorAnteriorX = x;
+        valorAnteriorY = y;
+
+
+        float[] values = SensorUtil.fixAcelerometro(this, event);
+
+        x = values[0];
+        y = values[1];
+        z = values[2];
+
+        //System.out.println(x + " " + y + " " + z);
+
+
+        //System.out.println(x + " *** " + y);
+
+        if ((x > 4 && x < 7) && (y > 7 && y < 10)){
+            System.out.println("Passar livro");
+            x = 0;
+            y = 0;
+            /*System.out.println((x-valorAnteriorX) + " *** " + (y-valorAnteriorY));
+            if ((x-valorAnteriorX)>1 && ((y-valorAnteriorY) < 1 && (y-valorAnteriorY) > -1)){
+
+            }*/
+        }
+
+
+    }
+
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(sensor != null) {
+            sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sensorManager.unregisterListener(this);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

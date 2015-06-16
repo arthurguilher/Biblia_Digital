@@ -70,6 +70,8 @@ public class ListaVersiculosFragment extends Fragment {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                         @Override
                         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                            idVersiculo = position;
+                            Toast.makeText(getActivity(), capitulo + " " + idVersiculo, Toast.LENGTH_LONG).show();
                             clipboad = "\""+listaAuxiliar.get(idVersiculo)+"\" ("+livro+" " + capitulo+":"+(idVersiculo+1)+")" ;
                             final String [] items = new String[] {"Adicionar aos favoritos", "Copiar texto", "Compartilhar"};
                             final Integer[] icons = new Integer[] {R.drawable.icone_favorito,
@@ -84,6 +86,7 @@ public class ListaVersiculosFragment extends Fragment {
                                                 case 0:
                                                     MyDBHandler db = new MyDBHandler(getActivity(), null, null, 1);
                                                     Favorito favorito = new Favorito(livro, capitulo, listaAuxiliar.get(idVersiculo), idVersiculo);
+                                                    System.out.println("VersiculoFragment: " + livro + " " + capitulo + " " + idVersiculo);
                                                     String msg = "";
                                                     if (db.adicionarFavorito(favorito)) {
                                                         msg = "O versículo foi adicionado aos favoritos";
@@ -115,9 +118,9 @@ public class ListaVersiculosFragment extends Fragment {
                                                                         //Gmail
                                                                         case 1:
                                                                             try {
-                                                                                Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
-                                                                                emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Versículo para sua meditação");
-                                                                                emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, clipboad);
+                                                                                Intent emailIntent = new Intent(Intent.ACTION_SEND);
+                                                                                emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Versículo para sua meditação");
+                                                                                emailIntent.putExtra(Intent.EXTRA_TEXT, clipboad);
                                                                                 emailIntent.setType("plain/text");
                                                                                 final PackageManager pm = getActivity().getPackageManager();
                                                                                 final List<ResolveInfo> matches = pm.queryIntentActivities(emailIntent, 0);
