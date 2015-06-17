@@ -121,7 +121,7 @@ public class ListaCapitulos extends ActionBarActivity implements SensorEventList
         @Override
         public Fragment getItem(int position) {
             switch (position){
-                case 0:
+                /*case 0:
                     livro = listaLivros.get(0);
                     qntCapitulos = qntdCapitulos(livro);
                     System.out.println("case 0");
@@ -140,10 +140,11 @@ public class ListaCapitulos extends ActionBarActivity implements SensorEventList
                     System.out.println("chamado");
                     livro = listaLivros.get(position);
                     qntCapitulos = qntdCapitulos(livro);
-                   break;
+                   break;*/
             }
             //livro = listaLivros.get(position+1);
             //qntCapitulos = qntdCapitulos(livro);
+            System.out.println("Livro **** " + livro);
             return new ListaCapitulosFragment(listarCapitulos(qntCapitulos), livro);
         }
 
@@ -199,6 +200,8 @@ public class ListaCapitulos extends ActionBarActivity implements SensorEventList
 
         if ((x > 4 && x < 7) && (y > 7 && y < 10)){
             System.out.println("Passar livro");
+            //new ScreenSlidePagerAdapter(getSupportFragmentManager());
+            //new ListaCapitulosFragment(listarCapitulos(qntCapitulos), livro);
             x = 0;
             y = 0;
             /*System.out.println((x-valorAnteriorX) + " *** " + (y-valorAnteriorY));

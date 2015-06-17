@@ -22,7 +22,8 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:textSize="21sp"
-                android:focusable="false">
+                android:focusable="false"
+                android:background="@drawable/my_drawable">
             </TextView>
         </RelativeLayout>
 
@@ -31,7 +32,8 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:textSize="17sp"
-            android:focusable="false">
+            android:focusable="false"
+            android:background="@drawable/my_drawable">
         </TextView>
     </LinearLayout>
 

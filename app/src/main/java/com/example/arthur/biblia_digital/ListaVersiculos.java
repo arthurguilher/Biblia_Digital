@@ -65,6 +65,8 @@ public class ListaVersiculos extends ActionBarActivity {
         busca = params.getInt("busca");
         setTitle("  " + livro + " - Capítulo " + capitulo);
 
+        System.out.println(livro + " - Capítulo " + capitulo + " " + paginas);
+
         if (busca == 1) {
             nodesCapitulos = MainActivity.nodeCapitulos;
             versiculoFavorito = params.getInt("idVersiculo");

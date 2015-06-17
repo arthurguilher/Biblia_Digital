@@ -57,6 +57,7 @@ public class ListaCapitulosFragment extends Fragment {
                 if (db.ultimoHistorico().getCapitulo() != position+1 && db.ultimoHistorico().getLivro() != livro) {
                     db.adicionarHistorico(new Historico(livro, position + 1));
                 }
+                //System.out.println(livro + " " + (position + 1));
             }
         });
         return rootView;
